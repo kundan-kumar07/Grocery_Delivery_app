@@ -2,14 +2,15 @@ import React, { useEffect } from "react"
 import { useState } from "react"
 import { useAppContext } from "../context/AppContext"
 import { assets, dummyAddress } from "../assets/assets"
+import toast from "react-hot-toast"
 const Cart = () => {
     const [showAddress, setShowAddress] = React.useState(false)
 
-    const {products,currency,cartItems,removeFromCart,getCartCount,updateCartItem,navigate,getCartAmount}=useAppContext();
+    const {products,currency,cartItems,removeFromCart,getCartCount,updateCartItem,navigate,getCartAmount,axios,user,setCartItems}=useAppContext();
 
     const [cartArray,setCartArray]=useState([]);
-    const [address,setAddress]=useState(dummyAddress);
-    const [selectedAddress,setSelectedAddress]=useState(dummyAddress[0]);
+    const [address,setAddress]=useState([]);
+    const [selectedAddress,setSelectedAddress]=useState(null);
     const [paymentOption,setPaymentOption]=useState("COD");
 
     const getCart = () => {
@@ -22,6 +23,25 @@ const Cart = () => {
   }
   setCartArray(tempArray);
 };
+const getUserAddress=async()=>{
+    try {
+        const {data}=await axios.get('/api/address/get');
+        if(data.success){
+            setAddress(data.addresses)
+            if(data.addresses.length>0){
+                setSelectedAddress(data.addresses[0])
+            }
+        }
+        else{
+            toast.error(data.message)
+
+        }
+        
+    } catch (error) {
+        toast.error(error.message)
+        
+    }
+}
 
 useEffect(() => {
   if (products.length > 0 && cartItems) {
@@ -29,7 +49,41 @@ useEffect(() => {
   }
 }, [products, cartItems]);
 
+useEffect(()=>{
+    if(user){
+        getUserAddress();
+    }
+
+},[user])
+
     const placeOrder=async()=>{
+        try {
+            if(!selectedAddress){
+                return toast.error("please select an address")
+            }
+
+            if(paymentOption=="COD"){
+                const {data}=await axios.post('/api/order/cod',{
+                    userId:user._id,
+                    items:cartArray.map(item=>({
+                        product:item._id,
+                        quantity:item.quantity
+                    })),address:selectedAddress._id
+                })
+                if(data.success){
+                    toast.success(data.message);
+                    setCartItems({});
+                    navigate('/my-orders')
+                }
+                else{
+                    toast.error(data.message);
+                }
+            }
+            
+        } catch (error) {
+            toast.error(error.message);
+            
+        }
 
     }
     
@@ -131,7 +185,7 @@ useEffect(() => {
                     </p>
                 </div>
 
-                <button className="w-full py-3 mt-6 cursor-pointer bg-primary text-white font-medium hover:bg-primary-dull transition">
+                <button onClick={placeOrder} className="w-full py-3 mt-6 cursor-pointer bg-primary text-white font-medium hover:bg-primary-dull transition">
                     {paymentOption==="COD" ? "Place order":"Proceed to checkout"}
                 </button>
             </div>
