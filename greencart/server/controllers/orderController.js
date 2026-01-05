@@ -5,7 +5,7 @@
 
 
 
-
+import User from '../models/user.js'
 
 
 import Order from "../models/order.js";
@@ -43,11 +43,18 @@ export const placeOrderStripe=async(req,res)=>{
 
     const {origin}=req.headers;
 
+
+
+
+
     if(!address || items.length===0){
       return res.json({success:false,message:"Invalid data"})
     }
 
-    let productData=[];
+    const productData=[];
+
+
+    
     //calculate amount using Items
     let amount=await items.reduce(async(acc,item)=>{
       const product=await Product.findById(item.product);
@@ -62,12 +69,108 @@ export const placeOrderStripe=async(req,res)=>{
       userId,
       items,amount,address,paymentType:"Online"
     })
-    return res.json({success:true,message:"Order placed Successfully"})
+
+    //stripe gateway initialize
+    const stripeInstance=new stripe(process.env.STRIPE_SECRET_KEY);
+
+    //create line items for stripe
+
+    const line_items=productData.map((item)=>{
+      return {
+        price_data:{
+          currency:"usd",
+          product_data:{
+            name:item.name,
+          },
+          unit_amount:Math.floor(item.price+item.price*0.02)*100
+        },
+        quantity:item.quantity,
+        
+      }
+      
+    })
+
+    //create session 
+    const session=await stripeInstance.checkout.sessions.create({
+      line_items,
+      mode:"payment",
+      success_url:`${origin}/loader?next=my-orders`,
+      cancel_url:`${origin}/cart`,
+      metadata:{
+        orderId:order._id.toString(),
+        userId,
+      }
+
+    })
+
+
+    return res.json({success:true,url:session.url});
   } catch (error) {
    return res.json({success:false,message:error.message})
     
   }
 }
+
+//verifying the payment using stripewebhook
+
+export const stripeWebHook=async(req,res)=>{
+  const stripeInstance=new stripe(process.env.STRIPE_SECRET_KEY);
+
+  const sig=request.headers["stripe-signature"];
+  let event;
+  try{
+    event=stripeInstance.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    )
+
+  }
+  catch(error){
+
+    res.status(400).send(`webhook error:${error.message}`)
+
+  }
+
+  switch(key){
+    case "payment_intent.succeeded":{
+      const paymentIntent=event.data.object;
+      const paymentIntentId=paymentIntent.id;
+      const session=await stripeInstance.checkout.sessions.list({
+        payment_intent:paymentIntentId,
+      })
+
+      const {userId,orderId}=session.data[0].metadata;
+      //mark payment as paid
+
+      await Order.findByIdAndUpdate(orderId,{isPaid:true})
+      await User.findByIdAndUpdate(userId,{cartItems:{}});
+      break;
+
+
+    }
+    case "payment_intent.payment_failed":{
+      const paymentIntent=event.data.object;
+      const paymentIntentId=paymentIntent.id;
+      const session=await stripeInstance.checkout.sessions.list({
+        payment_intent:paymentIntentId,
+      })
+
+      const {orderId}=session.data[0].metadata;
+
+      await Order.findByIdAndDelete(orderId);
+      break;
+    }
+      
+    default:
+      console.log(`unhandled event type ${event.type}`)
+      break;
+
+  }
+  res.json({recieved:true})
+
+}
+
 
 //Get orders by user Id:/api/order/user
 
