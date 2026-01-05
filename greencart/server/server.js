@@ -18,7 +18,10 @@ await connectCloudinary();
 
 
 //Middle ware configuration
-const allowedOrigins=['https://greencart-front.vercel.app']
+const allowedOrigins = [
+  'https://greencart-front.vercel.app',
+  'http://localhost:5173'
+];
 
 app.post('/stripe',express.raw({type:'application/json'}),stripeWebHook)
 app.use(express.json());
