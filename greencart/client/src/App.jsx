@@ -1,5 +1,5 @@
 import React from 'react'
-import NavBar from './components/NavBar'
+import Navbar from './components/Navbar'
 import { Routes, useLocation } from 'react-router-dom'
 import { Route } from 'react-router-dom'
 import Home from './pages/Home'
@@ -27,7 +27,7 @@ const App = () => {
   const isSellerPath=useLocation().pathname.includes("seller")
   return (
     <div className='text-default min-h-screen text-gray-700 bg-white'>
-    {isSellerPath ? null :<NavBar/>}
+    {isSellerPath ? null :<Navbar/>}
     {showUserLogin ? <Login/>:null}
     <Toaster/>
     <div className={`${isSellerPath ? "" :"px-6 md:px-16 lg:px-24 xl:px-32"}`}>
