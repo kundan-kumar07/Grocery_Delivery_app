@@ -36,7 +36,7 @@ const Navbar = () => {
   },[searchQuery])
 
   return (
-    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
+    <nav className="flex z-50 items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
 
             <NavLink to={'/'} onClick={()=>setOpen(false)}>
             <img className='h-9' src={assets.logo} alt="" />
@@ -89,7 +89,7 @@ const Navbar = () => {
                 <NavLink to={"/"} onClick={()=>setOpen(false)}>Home</NavLink>
                 <NavLink to="/products" onClick={()=>setOpen(false)}>All Product</NavLink>
                 {user && 
-                <NavLink to="/products" onClick={()=>setOpen(false)} >My Orders</NavLink>}
+                <NavLink to="/my-orders" onClick={()=>setOpen(false)} >My Orders</NavLink>}
                 <NavLink to="/products" onClick={()=>setOpen(false)}>Contact</NavLink>
 
                 {!user ? (
