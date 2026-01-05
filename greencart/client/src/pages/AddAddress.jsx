@@ -2,9 +2,16 @@ import React, { useEffect, useState } from 'react'
 import { assets } from '../assets/assets'
 import { useAppContext } from '../context/AppContext'
 import toast from 'react-hot-toast'
-
+const InputField=({type,placeholder,name,handleChange,address})=>(
+    <input className='w-full px-2 py-2.5 border border-gray-500/30 rounded outline-none text-gray-500 focus:border-primary transition' type={type} placeholder={placeholder}
+    onChange={handleChange}
+    name={name}
+    value={address[name]}
+    required/>
+  )
 const AddAddress = () => {
   const {axios,user,navigate}=useAppContext();
+  
 
   const [address,setAddress]=useState({
     firstName:'',
@@ -28,13 +35,7 @@ const AddAddress = () => {
     }))
   }
 
-  const InputField=({type,placeholder,name,handleChange,address})=>(
-    <input className='w-full px-2 py-2.5 border border-gray-500/30 rounded outline-none text-gray-500 focus:border-primary transition' type={type} placeholder={placeholder}
-    onChange={handleChange}
-    name={name}
-    value={address[name]}
-    required/>
-  )
+  
   const onSubmitHandler=async (e)=>{
     e.preventDefault();
     try {
@@ -52,11 +53,14 @@ const AddAddress = () => {
       
     }
   }
+
   useEffect(()=>{
     if(!user){
       navigate('/cart');
     }
-  },[user,navigate])
+  },[navigate,user])
+  
+
   return (
     <div className='mt-16 pb-16'>
       <p className='text-2xl md:text-3xl text-gray-500'>Add Shipping <span className='font-semibold text-primary'>Address</span></p>
@@ -74,7 +78,7 @@ const AddAddress = () => {
             <InputField handleChange={handleChange} address={address} name='street' type="text" placeholder="Street"/>
             
             <div className='grid grid-cols-2 gap-4'>
-              <InputField handleChange={handleChange} address={address} name='zipcode' type="number" placeholder="Zipcode"/>
+              <InputField handleChange={handleChange} address={address} name='zipcode' type="text" placeholder="Zipcode"/>
               <InputField handleChange={handleChange} address={address} name='state' type="text" placeholder="State"/>
 
 
