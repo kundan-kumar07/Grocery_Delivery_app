@@ -22,7 +22,7 @@ import Orders from './pages/seller/Orders'
 import Loading from './components/Loading'
 
 const App = () => {
-  const {showUserLogin,isSeller}=useAppContext();
+  const {showUserLogin,isSeller,user,}=useAppContext();
   
   const isSellerPath=useLocation().pathname.includes("seller")
   return (
@@ -36,7 +36,7 @@ const App = () => {
         <Route path='/products' element={<AllProducts/>}/>
         <Route path='/products/:category' element={<ProductCategory/>}/>
         <Route path='/products/:category/:id' element={<ProductDetails/>}/>
-        <Route path='/cart' element={<Cart/>}/>
+        <Route path='/cart' element={user ?<Cart/>:<Login/>}/>
         <Route path='/add-address' element={<AddAddress/>}/>
         <Route path='/my-orders' element={<MyOrders/>}/>
         <Route path='/loader' element={<Loading/>}/>
